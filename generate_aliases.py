@@ -25,17 +25,23 @@ try:
 except NameError:
     xrange = range  # Python 3
 
-
 def main():
     # (alias, full, allow_when_oneof, incompatible_with)
     cmds = [('k', 'kubectl', None, None)]
 
-    globs = [('sys', '--namespace=kube-system', None, None)]
+    globs = [
+        ('sys', '--namespace=kube-system', None, None),
+        ('shd', '--namespace=shared', None, None),
+        ('shi', '--namespace=shared-internal', None, None),
+        ('log', '--namespace=logging', None, None),
+        ('mon', '--namespace=monitoring', None, None),
+        ]
+    globs_list = [g[0] for g in globs]
 
     ops = [
-        ('a', 'apply --recursive -f', None, None),
-        ('ak', 'apply -k', None, ['sys']),
-        ('k', 'kustomize', None, ['sys']),
+        # ('a', 'apply --recursive -f', None, None),
+        # ('ak', 'apply -k', None, ['sys']),
+        # ('k', 'kustomize', None, ['sys']),
         ('ex', 'exec -i -t', None, None),
         ('lo', 'logs -f', None, None),
         ('lop', 'logs -f -p', None, None),
@@ -44,19 +50,23 @@ def main():
         ('g', 'get', None, None),
         ('d', 'describe', None, None),
         ('rm', 'delete', None, None),
-        ('run', 'run --rm --restart=Never --image-pull-policy=IfNotPresent -i -t', None, None),
+        # ('run', 'run --rm --restart=Never --image-pull-policy=IfNotPresent -i -t', None, None),
         ]
+    ops_list = [o[0] for o in ops]
 
     res = [
         ('po', 'pods', ['g', 'd', 'rm'], None),
         ('dep', 'deployment', ['g', 'd', 'rm'], None),
         ('sts', 'statefulset', ['g', 'd', 'rm'], None),
+        ('ds', 'daemonsets', ['g', 'd', 'rm'], None),
         ('svc', 'service', ['g', 'd', 'rm'], None),
         ('ing', 'ingress', ['g', 'd', 'rm'], None),
         ('cm', 'configmap', ['g', 'd', 'rm'], None),
         ('sec', 'secret', ['g', 'd', 'rm'], None),
         ('no', 'nodes', ['g', 'd'], ['sys']),
         ('ns', 'namespaces', ['g', 'd', 'rm'], ['sys']),
+        ('pvc', 'persistentvolumeclaim', ['g', 'd', 'rm'], None),
+        ('pv', 'persistentvolumes', ['g', 'd', 'rm'], ['sys', 'shd', 'shi', 'log', 'mon']),
         ]
     res_types = [r[0] for r in res]
 
@@ -66,21 +76,27 @@ def main():
         ('ojson', '-o=json', ['g'], ['owide', 'oyaml', 'sl']),
         ('all', '--all-namespaces', ['g', 'd'], ['rm', 'f', 'no', 'ns', 'sys']),
         ('sl', '--show-labels', ['g'], ['oyaml', 'ojson'], None),
-        ('all', '--all', ['rm'], None), # caution: reusing the alias
+        # ('all', '--all', ['rm'], None), # caution: reusing the alias
         ('w', '--watch', ['g'], ['oyaml', 'ojson', 'owide']),
         ]
+    args_list = [a[0] for a in args]
 
     # these accept a value, so they need to be at the end and
     # mutually exclusive within each other.
-    positional_args = [('f', '--recursive -f', ['g', 'd', 'rm'], res_types + ['all'
-                       , 'l', 'sys']), ('l', '-l', ['g', 'd', 'rm'], ['f',
-                       'all']), ('n', '--namespace', ['g', 'd', 'rm',
-                       'lo', 'ex', 'pf'], ['ns', 'no', 'sys', 'all'])]
+    positional_args = [
+        ('f', '--recursive -f', ['g', 'd', 'rm'], res_types + ['all', 'l', 'sys']),
+        ('l', '-l', ['g', 'd', 'rm'], ['f', 'all']),
+        ('n', '--namespace', ['g', 'd', 'rm', 'lo', 'ex', 'pf'], ['ns', 'no', 'sys', 'all']),
+        ('gc', 'config get-contexts', ['k'], res_types + ops_list + globs_list + args_list),
+        ('uc', 'config use-context', ['k'], res_types + ops_list + globs_list + args_list),
+        ('rmc', 'config delete-context', ['k'], res_types + ops_list + globs_list + args_list),
+        ('rc', 'config rename-context', ['k'], res_types + ops_list + globs_list + args_list),
+        ]
 
     # [(part, optional, take_exactly_one)]
     parts = [
         (cmds, False, True),
-        (globs, True, False),
+        (globs, True, True),
         (ops, True, True),
         (res, True, True),
         (args, True, False),
