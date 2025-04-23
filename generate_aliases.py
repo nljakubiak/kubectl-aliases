@@ -42,6 +42,7 @@ def main():
         # ('a', 'apply --recursive -f', None, None),
         # ('ak', 'apply -k', None, ['sys']),
         # ('k', 'kustomize', None, ['sys']),
+        ('e', 'edit', None, None),
         ('ex', 'exec -i -t', None, None),
         ('lo', 'logs -f', None, None),
         ('lop', 'logs -f -p', None, None),
@@ -55,18 +56,18 @@ def main():
     ops_list = [o[0] for o in ops]
 
     res = [
-        ('po', 'pods', ['g', 'd', 'rm'], None),
-        ('dep', 'deployment', ['g', 'd', 'rm'], None),
-        ('sts', 'statefulset', ['g', 'd', 'rm'], None),
-        ('ds', 'daemonsets', ['g', 'd', 'rm'], None),
-        ('svc', 'service', ['g', 'd', 'rm'], None),
-        ('ing', 'ingress', ['g', 'd', 'rm'], None),
-        ('cm', 'configmap', ['g', 'd', 'rm'], None),
-        ('sec', 'secret', ['g', 'd', 'rm'], None),
-        ('no', 'nodes', ['g', 'd'], ['sys']),
-        ('ns', 'namespaces', ['g', 'd', 'rm'], ['sys']),
+        ('po', 'pods', ['g', 'd', 'rm', 'e'], None),
+        ('dep', 'deployment', ['g', 'd', 'rm', 'e'], None),
+        ('sts', 'statefulset', ['g', 'd', 'rm', 'e'], None),
+        ('ds', 'daemonsets', ['g', 'd', 'rm', 'e'], None),
+        ('svc', 'service', ['g', 'd', 'rm', 'e'], None),
+        ('ing', 'ingress', ['g', 'd', 'rm', 'e'], None),
+        ('cm', 'configmap', ['g', 'd', 'rm', 'e'], None),
+        ('sec', 'secret', ['g', 'd', 'rm', 'e'], None),
+        ('no', 'nodes', ['g', 'd'], globs_list),
+        ('ns', 'namespaces', ['g', 'd', 'rm'], globs_list),
         ('pvc', 'persistentvolumeclaim', ['g', 'd', 'rm'], None),
-        ('pv', 'persistentvolumes', ['g', 'd', 'rm'], ['sys', 'shd', 'shi', 'log', 'mon']),
+        ('pv', 'persistentvolumes', ['g', 'd', 'rm'], globs_list),
         ]
     res_types = [r[0] for r in res]
 
@@ -74,7 +75,7 @@ def main():
         ('oyaml', '-o=yaml', ['g'], ['owide', 'ojson', 'sl']),
         ('owide', '-o=wide', ['g'], ['oyaml', 'ojson']),
         ('ojson', '-o=json', ['g'], ['owide', 'oyaml', 'sl']),
-        ('all', '--all-namespaces', ['g', 'd'], ['rm', 'f', 'no', 'ns', 'sys']),
+        ('all', '--all-namespaces', ['g', 'd'], ['rm', 'f', 'no', 'ns'] + globs_list),
         ('sl', '--show-labels', ['g'], ['oyaml', 'ojson'], None),
         # ('all', '--all', ['rm'], None), # caution: reusing the alias
         ('w', '--watch', ['g'], ['oyaml', 'ojson', 'owide']),
@@ -84,9 +85,9 @@ def main():
     # these accept a value, so they need to be at the end and
     # mutually exclusive within each other.
     positional_args = [
-        ('f', '--recursive -f', ['g', 'd', 'rm'], res_types + ['all', 'l', 'sys']),
+        ('f', '--recursive -f', ['g', 'd', 'rm'], res_types + ['all', 'l'] + globs_list),
         ('l', '-l', ['g', 'd', 'rm'], ['f', 'all']),
-        ('n', '--namespace', ['g', 'd', 'rm', 'lo', 'ex', 'pf'], ['ns', 'no', 'sys', 'all']),
+        ('n', '--namespace', ['g', 'd', 'rm', 'lo', 'ex', 'pf', 'e'], ['ns', 'no', 'all'] + globs_list),
         ('gc', 'config get-contexts', ['k'], res_types + ops_list + globs_list + args_list),
         ('uc', 'config use-context', ['k'], res_types + ops_list + globs_list + args_list),
         ('rmc', 'config delete-context', ['k'], res_types + ops_list + globs_list + args_list),
